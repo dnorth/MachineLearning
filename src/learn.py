@@ -92,7 +92,7 @@ def main():
                                  feature_class_names, class_names)
     """
     if algorithm_name == 'perceptron':
-        algorithm = Perceptron(threshold=0, learningRate=0.1)
+        algorithm = Perceptron(threshold=0, learningRate=.1)
     if algorithm_name == 'knn':
         algorithm = KNearestNeighbors(k=15, distance_weighting=False, normalize=False)
     elif algorithm_name == 'knn_regression':
@@ -178,6 +178,7 @@ def main():
             classDict[row[-1]]["y"].append(row[1])
 
         #plot_scatter(classDict, algorithm)
+        plot_epoch_change(algorithm)
 
 
 def plot_scatter(classDict, algorithm):
@@ -191,6 +192,15 @@ def plot_scatter(classDict, algorithm):
     legend(handles = legend_info)
     xlabel('X')
     ylabel('Y')
+    show()
+
+def plot_epoch_change(algorithm):
+    y_list = algorithm.epochDeltas
+    x_list = xrange(len(y_list))
+
+    plot(x_list , y_list)
+    xlabel('Epochs')
+    ylabel('Change Over Epoch')
     show()
 
 def get_points_from_weights(weights):
