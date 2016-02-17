@@ -5,6 +5,7 @@ import arff
 # from MultilayerPerceptron import MultilayerPerceptron
 # from DecisionTree import DecisionTree
 from Perceptron import Perceptron
+from BackPropagation import BackPropNode
 from matplotlib.pyplot import *
 import matplotlib.patches as mpatches 
 
@@ -93,6 +94,8 @@ def main():
     """
     if algorithm_name == 'perceptron':
         algorithm = Perceptron(threshold=0, learningRate=.1)
+    if algorithm_name == 'backprop':
+        algorithm = BackPropNode()
     if algorithm_name == 'knn':
         algorithm = KNearestNeighbors(k=15, distance_weighting=False, normalize=False)
     elif algorithm_name == 'knn_regression':
@@ -178,7 +181,7 @@ def main():
             classDict[row[-1]]["y"].append(row[1])
 
         #plot_scatter(classDict, algorithm)
-        plot_epoch_change(algorithm)
+        #plot_epoch_change(algorithm)
 
 
 def plot_scatter(classDict, algorithm):

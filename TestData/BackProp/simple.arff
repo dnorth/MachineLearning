@@ -1,0 +1,7 @@
+@relation simpleData
+@attribute a1 real
+@attribute a2 real
+@attribute class {0,1}
+@data
+0, 0, 1
+0, 1, 0
