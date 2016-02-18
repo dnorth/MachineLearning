@@ -95,7 +95,7 @@ def main():
     if algorithm_name == 'perceptron':
         algorithm = Perceptron(threshold=0, learningRate=.1)
     if algorithm_name == 'backprop':
-        algorithm = BackPropNode()
+        algorithm = BackPropNode(hidden_node_multiplier=2, rand_weights=True, learning_rate=0.1, momentum=0)
     if algorithm_name == 'knn':
         algorithm = KNearestNeighbors(k=15, distance_weighting=False, normalize=False)
     elif algorithm_name == 'knn_regression':
@@ -106,7 +106,6 @@ def main():
     if algorithm_name =='knn':
         accuracies = []
         k_values = arange(1, 16, 2)
-
         algorithm.train(training_set)
 
         for k in k_values:
@@ -157,6 +156,7 @@ def main():
 
     elif dataset_type != DatasetType.cross:
         algorithm.train(training_set)
+        targets = instances[:, -1]
         accuracy, confusion_matrix = test(algorithm, test_set, num_classes)
         print("accuracy: %.3f%%" % accuracy)
         print(confusion_matrix)
