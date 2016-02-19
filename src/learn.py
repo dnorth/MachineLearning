@@ -95,7 +95,7 @@ def main():
     if algorithm_name == 'perceptron':
         algorithm = Perceptron(threshold=0, learningRate=.1)
     if algorithm_name == 'backprop':
-        algorithm = BackPropNode(hidden_node_multiplier=2, rand_weights=True, learning_rate=0.1, momentum=0, num_outputs=3)
+        algorithm = BackPropNode(hidden_node_multiplier=6, rand_weights=True, learning_rate=0.3, momentum=0.2, num_outputs=1)
     if algorithm_name == 'knn':
         algorithm = KNearestNeighbors(k=15, distance_weighting=False, normalize=False)
     elif algorithm_name == 'knn_regression':
@@ -248,8 +248,8 @@ def test(algorithm, test_set, num_classes):
         goal = instance[-1]
 
         prediction = algorithm.predict(features)
-        print "Goal: ", goal
-        print "Prediction: ", prediction
+        #print "Goal: ", goal
+        #print "Prediction: ", prediction
         num_correct += 1 if prediction == goal else 0
         confusion_matrix[int(goal), int(prediction)] += 1
 

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import random
+from matplotlib.font_manager import FontProperties
 
 class BackPropLayer:
 	def __init__(self, learning_rate, bias, rand_weights, momentum):
@@ -53,7 +54,11 @@ class OutputLayer(BackPropLayer):
 		self.inputs = np.array(inputs)
 
 	def update_target(self, target):
-		self.target = target
+		if self.num_outputs > 1:
+			self.target = np.zeros(self.num_outputs)
+			np.put( self.target, target, 1)
+		else:
+			self.target = target
 
 	def calculate_error(self):
 		return (self.target - self.outputs) * self.outputs * ( 1 - self.outputs )
@@ -88,7 +93,7 @@ class BackPropNode:
 		self.output_layer = OutputLayer(rand_weights, learning_rate, momentum, bias, num_outputs)
 
 	def train(self, instances):
-		percent_for_training = .80
+		percent_for_training = .9
 		
 		training_instances = instances[0:percent_for_training * len(instances)]
 		validation_instances = instances[percent_for_training * len(instances):-1]
@@ -100,23 +105,43 @@ class BackPropNode:
 		bssfStable = 0
 		epochNum = 0
 
-		while( bssfStable < 1000 and (bssf < 100 or bssfStable < 5) ):
+		accuracies = []
+		mses = []
+		mses_vs = [] 
+
+		while( bssfStable < 300 and (bssf < 100 or bssfStable < 50) ):
 		 	epochNum += 1
 		 	#shuffle the data after every epoch
 		 	inputs, targets = self.shuffle_data(inputs, targets)
 		 	outputs = []
+		 	sse = 0
+		 	sse_vs = 0
 			for x in xrange(len(inputs)):
 				self.output_layer.update_target( targets[x] )
 				output = self.forwardMotion( inputs[x] )
-				outputs.append(output)
+				sse += ( targets[x] -  np.argmax(output) ) ** 2
 				self.backProp()
-		 	accuracy = self.validate_data(validation_instances)
+		 	accuracy, sse_temp = self.validate_data(validation_instances)
+		 	sse_vs += sse_temp
+		 	#print "BSSF: ", bssf
+		 	#print "Accuracy: ", accuracy
+		 	accuracies.append( accuracy )
+		 	mse = sse / len( inputs )
+		 	mse_vs = sse_vs / len( inputs )
+		 	mses.append( mse )
+		 	mses_vs.append( mse_vs )
 		 	if accuracy > bssf:
 		 		bssf = accuracy
 		 		bssfStable = 0
+		 		bestEpoch = epochNum
 		 	else:
 		 		bssfStable += 1
 		print "Epoch: ", epochNum
+		print "Best Epoch: ", bestEpoch
+		print "Learning Rate: ", self.hidden_layer.learning_rate
+
+		self.plot_accuracies_mses(epochNum, accuracies, mses, mses_vs)
+
 			# Plotting for the Y values
 			#if e in [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000]:
 			#	plt.title("Epoch %d" % e)
@@ -125,6 +150,21 @@ class BackPropNode:
 			#	plt.clim(0,1)
 			#	plt.show()
 
+	def plot_accuracies_mses(self, epochNum, accuracies, mses, mses_vs):
+		c1, = plt.plot( xrange(epochNum), accuracies, c='blue', linewidth=4, label="Train Accuracy")
+		c2, = plt.plot( xrange(epochNum), mses, c='green', linewidth=4, label="MSE Train")
+		c3, = plt.plot( xrange(epochNum), mses_vs, c='red', linewidth=8, label="MSE Validation")
+		plt.yscale('symlog')
+		fontP = FontProperties()
+		fontP.set_size('small')
+		plt.legend(handles=[c1, c2, c3], prop= fontP, loc=0)
+		plt.title("Train Accuracy and MSE")
+		plt.xlabel("Epoch Number")
+		plt.ylabel("Percentage")
+		plt.show()
+
+
+
 	def validate_data(self, validation_set):
 		num_correct = 0.0
 		for instance in validation_set:
@@ -132,10 +172,11 @@ class BackPropNode:
 			goal = instance[-1]
 
 			prediction = self.predict(features)
+			sse_vs = ( goal -  prediction ) ** 2
 			num_correct += 1 if prediction == goal else 0
 
 		accuracy = (num_correct / len(validation_set)) * 100
-		return accuracy
+		return accuracy, sse_vs
 
 	def shuffle_data(self, inputs, targets):
 		combined = zip(inputs, targets)
@@ -148,12 +189,7 @@ class BackPropNode:
 	def predict(self, inputs):
 		prediction = self.forwardMotion( inputs )
 		if len(prediction) == 1:
-			if prediction < 0.4:
-				return 0
-			elif prediction < 0.9994:
-				return 1
-			else:
-				return 2
+			return prediction
 		else:
 			return np.argmax(prediction)
 
