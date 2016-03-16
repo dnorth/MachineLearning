@@ -1,0 +1,7 @@
+@relation nearestNeighbor
+@attribute a1 real
+@attribute class {A,B}
+@data
+0.5, B
+0.9, B
+0.3, A

@@ -1,14 +1,14 @@
+from __future__ import division
 from numpy import *
 from enum import Enum
 from collections import OrderedDict
 import arff
-# from MultilayerPerceptron import MultilayerPerceptron
-# from DecisionTree import DecisionTree
+from NearestNeighbor import NearestNeighbor
 from Perceptron import Perceptron
 from BackPropagation import BackPropNode
+from DecisionTree import DecisionTree
 from matplotlib.pyplot import *
 import matplotlib.patches as mpatches 
-
 import sys
 
 
@@ -94,33 +94,37 @@ def main():
     """
     if algorithm_name == 'perceptron':
         algorithm = Perceptron(threshold=0, learningRate=.1)
-    if algorithm_name == 'backprop':
+    elif algorithm_name == 'backprop':
         algorithm = BackPropNode(hidden_node_multiplier=6, rand_weights=True, learning_rate=0.3, momentum=0.2, num_outputs=1)
-    if algorithm_name == 'knn':
-        algorithm = KNearestNeighbors(k=15, distance_weighting=False, normalize=False)
+    elif algorithm_name == 'decisiontree':
+        algorithm = DecisionTree(debug=False, validation=False)
+    elif algorithm_name == 'knn':
+        algorithm = NearestNeighbor(k=3, distance_weighting=False, normalize=True)
     elif algorithm_name == 'knn_regression':
-        algorithm = KNearestNeighbors(k=3, regression=True, distance_weighting=True)
+        algorithm = NearestNeighbor(k=3, regression=True, distance_weighting=True)
     elif algorithm_name == 'knn_mixed':
-        algorithm = KNearestNeighbors(k=3, distance_weighting=True, attribute_types=attribute_types)
+        algorithm = NearestNeighbor(k=3, distance_weighting=True, attribute_types=attribute_types)
 
     if algorithm_name =='knn':
         accuracies = []
-        k_values = arange(1, 16, 2)
+        k_values = arange(1,16, 2)
         algorithm.train(training_set)
+
+        import numpy as np
 
         for k in k_values:
             algorithm.k = k
-            accuracy, confusion_matrix = test(algorithm, test_set, num_classes)
+            accuracy, confusion_matrix = test(algorithm, test_set, num_classes, normalize=True)
             print("k: %d, accuracy: %.3f%%" % (k, accuracy))
             accuracies.append(accuracy)
 
         figure()
+        print "Accuracies: ", accuracies
         plot(k_values, accuracies)
         xticks(k_values)
         title('Magic Telescope Test Set Accuracy')
         xlabel('k')
         ylabel('Accuracy')
-        tight_layout()
 
         show()
 
@@ -214,7 +218,7 @@ def get_points_from_weights(weights):
         y.append((-weights[0] * points) / weights[1] + weights[2] / weights[1])
     return x , y
 
-def cross_validate(algorithm, data, num_classes, num_folds=10, return_training_accuracy=True):
+def cross_validate(algorithm, data, num_classes, num_folds=10, return_training_accuracy=True, plot_data=True):
     test_accuracies = []
     training_accuracies = []
     instances_per_fold = int(len(data) / num_folds)
@@ -233,16 +237,34 @@ def cross_validate(algorithm, data, num_classes, num_folds=10, return_training_a
         test_accuracy, test_confusion_matrix = test(algorithm, test_set, num_classes)
         test_accuracies.append(test_accuracy)
 
+    if plot_data:
+        folds_list = xrange(num_folds)
+
+        c1, = plot(folds_list , test_accuracies, color="red", label="test accuracy")
+        if return_training_accuracy:
+            c2, = plot(folds_list, training_accuracies, color="blue", label="training accuracy")
+        xlabel('Fold #')
+        ylabel('Accuracy')
+        ylim(0,105)
+        legend(handles=[c1, c2], loc=0)
+        show()
+
     if return_training_accuracy:
         return training_accuracies, test_accuracies
     else:
         return test_accuracies
 
 
-def test(algorithm, test_set, num_classes):
+def test(algorithm, test_set, num_classes, normalize=False):
     confusion_matrix = asarray(zeros((num_classes, num_classes)))
 
     num_correct = 0.0
+
+    if normalize:
+            test_set = normalize_data(test_set)
+
+
+
     for instance in test_set:
         features = instance[:-1]
         goal = instance[-1]
@@ -272,6 +294,10 @@ def test_continuous(algorithm, test_set):
     mse = sse / len(test_set)
 
     return mse
+
+def normalize_data(data):
+    data = data[:] - np.min(data, axis=0)
+    return data[:] / np.max(data, axis=0)
 
 if __name__ == '__main__':
     main()
