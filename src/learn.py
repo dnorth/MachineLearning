@@ -99,11 +99,11 @@ def main():
     elif algorithm_name == 'decisiontree':
         algorithm = DecisionTree(debug=False, validation=False)
     elif algorithm_name == 'knn':
-        algorithm = NearestNeighbor(k=3, distance_weighting=False, normalize=True)
+        algorithm = NearestNeighbor(k=7, distance_weighting=False, normalize=True)
     elif algorithm_name == 'knn_regression':
-        algorithm = NearestNeighbor(k=3, regression=True, distance_weighting=True)
+        algorithm = NearestNeighbor(k=3, regression=True, distance_weighting=True, normalize=True)
     elif algorithm_name == 'knn_mixed':
-        algorithm = NearestNeighbor(k=3, distance_weighting=True, attribute_types=attribute_types)
+        algorithm = NearestNeighbor(k=13, distance_weighting=False, attribute_types=attribute_types)
 
     if algorithm_name =='knn':
         accuracies = []
@@ -136,7 +136,7 @@ def main():
 
         for k in k_values:
             algorithm.k = k
-            mse = test_continuous(algorithm, test_set)
+            mse = test_continuous(algorithm, test_set, normalize=True)
             print("k: %d, MSE: %.3f" % (k, mse))
             mses.append(mse)
 
@@ -146,7 +146,6 @@ def main():
         title('Housing Price Prediction Test Error')
         xlabel('k')
         ylabel('MSE')
-        tight_layout()
 
         show()
 
@@ -246,7 +245,11 @@ def cross_validate(algorithm, data, num_classes, num_folds=10, return_training_a
         xlabel('Fold #')
         ylabel('Accuracy')
         ylim(0,105)
-        legend(handles=[c1, c2], loc=0)
+
+        if return_training_accuracy:
+            legend(handles=[c1, c2], loc=0)
+        else:
+            legend(handles=[c1], loc=0)
         show()
 
     if return_training_accuracy:
@@ -280,11 +283,16 @@ def test(algorithm, test_set, num_classes, normalize=False):
     return accuracy, confusion_matrix
 
 
-def test_continuous(algorithm, test_set):
+def test_continuous(algorithm, test_set, normalize=False):
     num_correct = 0.0
     sse = 0.0
+
     for instance in test_set:
         features = instance[:-1]
+
+        if normalize:
+            features = normalize_data(features)
+
         goal = instance[-1]
 
         prediction = algorithm.predict(features)
