@@ -7,6 +7,7 @@ from NearestNeighbor import NearestNeighbor
 from Perceptron import Perceptron
 from BackPropagation import BackPropNode
 from DecisionTree import DecisionTree
+from Cluster import Cluster
 from matplotlib.pyplot import *
 import matplotlib.patches as mpatches 
 import sys
@@ -104,6 +105,8 @@ def main():
         algorithm = NearestNeighbor(k=3, regression=True, distance_weighting=True, normalize=True)
     elif algorithm_name == 'knn_mixed':
         algorithm = NearestNeighbor(k=13, distance_weighting=False, attribute_types=attribute_types)
+    elif algorithm_name == 'cluster' or algorithm_name == 'cluster_mult':
+        algorithm = Cluster(k=2, normalize=False)
 
     if algorithm_name =='knn':
         accuracies = []
@@ -148,6 +151,49 @@ def main():
         ylabel('MSE')
 
         show()
+
+    elif algorithm_name == 'cluster':
+        sses = []
+
+        for x in xrange(5):
+            algorithm.k = 4
+            algorithm.centroids = []
+            algorithm.train(training_set)
+            sse = test_continuous(algorithm, test_set, normalize=False, only_sse=True)
+            sses.append( sse )
+            print("k: %d, SSE: %.3f" % (algorithm.k, sse))
+
+        figure()
+        plot(xrange(5), sses)
+        xticks(xrange(5))
+        title('Iris SSE Test Error - K = 4')
+        xlabel('Iteration')
+        ylabel('SSE')
+
+        show()
+
+    elif algorithm_name == 'cluster_mult':
+
+        k_values = arange(2,8,1)
+        sses = []
+
+        for k in k_values:
+            algorithm.k = k
+            algorithm.centroids = []
+            algorithm.train(training_set)
+            sse = test_continuous(algorithm, test_set, normalize=False, only_sse=True)
+            print("k: %d, SSE: %.3f" % (algorithm.k, sse))
+            sses.append(sse)
+        
+        figure()
+        plot(k_values, sses)
+        xticks(k_values)
+        title('Iris SSE Test Error')
+        xlabel('k')
+        ylabel('SSE')
+
+        show()
+
 
     elif algorithm_name == 'knn_mixed':
         accuracies = []
@@ -283,7 +329,7 @@ def test(algorithm, test_set, num_classes, normalize=False):
     return accuracy, confusion_matrix
 
 
-def test_continuous(algorithm, test_set, normalize=False):
+def test_continuous(algorithm, test_set, normalize=False, only_sse = False):
     num_correct = 0.0
     sse = 0.0
 
@@ -297,7 +343,17 @@ def test_continuous(algorithm, test_set, normalize=False):
 
         prediction = algorithm.predict(features)
 
-        sse += (goal - prediction) ** 2
+        diff = goal - prediction
+
+        if np.isnan(goal) or np.isnan(prediction):
+            diff = 1.0
+
+        sse += (diff) ** 2
+
+        #print("Goal: %.2f Prediction: %.2f" % (goal, prediction))
+
+    if only_sse:
+        return sse
 
     mse = sse / len(test_set)
 

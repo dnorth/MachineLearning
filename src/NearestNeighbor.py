@@ -72,10 +72,6 @@ class NearestNeighbor:
 		#
 		#print "Modified Len: ", len(self.training_instances)
 
-		#np.random.shuffle(self.training_instances)
-		#self.training_instances = self.training_instances[:2000]
-
-
 	def predict(self, inputs):
 		neighbors =  self.get_neighbors(inputs)
 
