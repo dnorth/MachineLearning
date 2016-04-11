@@ -15,7 +15,11 @@ class BackPropLayer:
 		self.rand_weights = rand_weights
 		self.momentum = momentum
 	def get_output_sigmoid(self, data):
-		return 1 / ( 1 + exp ( -data ) )
+		try: 
+			return 1 / ( 1 + exp ( -data ) )
+		except OverflowError:
+			#print "Overflow"
+			return 0.1 
 	
 	def update_weights(self):
 		self.weights = self.weights + self.deltaWeights
@@ -94,6 +98,9 @@ class BackPropNode:
 
 	def train(self, instances):
 		percent_for_training = .9
+
+		for index in xrange(len(instances)):
+			instances[index] = [1 if np.isnan(x) else x for x in instances[index]]
 		
 		training_instances = instances[0:percent_for_training * len(instances)]
 		validation_instances = instances[percent_for_training * len(instances):-1]
@@ -136,7 +143,7 @@ class BackPropNode:
 		 		bestEpoch = epochNum
 		 	else:
 		 		bssfStable += 1
-		print "Epoch: ", epochNum
+			print "Epoch: ", epochNum, " BSSF: ", bssf, " Accuracy: ", accuracy
 		print "Best Epoch: ", bestEpoch
 		print "Learning Rate: ", self.hidden_layer.learning_rate
 

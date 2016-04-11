@@ -96,7 +96,7 @@ def main():
     if algorithm_name == 'perceptron':
         algorithm = Perceptron(threshold=0, learningRate=.1)
     elif algorithm_name == 'backprop':
-        algorithm = BackPropNode(hidden_node_multiplier=6, rand_weights=True, learning_rate=0.3, momentum=0.2, num_outputs=1)
+        algorithm = BackPropNode(hidden_node_multiplier=6, rand_weights=True, learning_rate=0.3, momentum=0.2, num_outputs=2)
     elif algorithm_name == 'decisiontree':
         algorithm = DecisionTree(debug=False, validation=False)
     elif algorithm_name == 'knn':
@@ -188,7 +188,7 @@ def main():
         figure()
         plot(k_values, sses)
         xticks(k_values)
-        title('Iris SSE Test Error')
+        title('Iris SSE Test ErrorTT')
         xlabel('k')
         ylabel('SSE')
 
